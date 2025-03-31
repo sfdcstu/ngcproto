@@ -76,5 +76,6 @@ if (!existsSync(distDir)) {
     mkdirSync(distDir)
 }
 rmSync(distDir, { recursive: true });
-cpSync(resolve(ngcBuildsDir, "./"), distDir, { recursive: true });
+mkdirSync(resolve(distDir, "releases/ngc"), { recursive: true });
+cpSync(resolve(ngcBuildsDir, "./"), resolve(distDir, "releases/ngc"), { recursive: true });
 writeFileSync(resolve(distDir, "manifest.json"), JSON.stringify(manifest, null, 2));
