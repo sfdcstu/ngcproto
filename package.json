@@ -1,0 +1,20 @@
+{
+  "name": "ngc-prototype",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/airkitjeremy/ngcproto.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/airkitjeremy/ngcproto/issues"
+  },
+  "homepage": "https://github.com/airkitjeremy/ngcproto#readme",
+  "description": ""
+}
