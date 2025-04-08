@@ -24,10 +24,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    # - run: npm test
+        cache: 'yarn'
+    - run: yarn install --immutable
+    - run: yarn create-manifest
+    # - run: yarn test
     - name: Upload distribution artifacts
       uses: actions/upload-pages-artifact@v3
       with:

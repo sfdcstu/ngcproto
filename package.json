@@ -4,7 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "node build.js"
+    "create-manifest": "node createManifest.js",
+    "copy-build": "node copyBuild.js",
+    "setup": "node setup.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +18,8 @@
     "url": "https://github.com/airkitjeremy/ngcproto/issues"
   },
   "homepage": "https://github.com/airkitjeremy/ngcproto#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "terminal-kit": "^3.1.2"
+  }
 }
