@@ -2,3 +2,4 @@ dist
 .local-config
 .pnp.*
 .yarn
+node_modules/
