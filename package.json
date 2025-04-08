@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.js",
-    "prepare": "node prepare.js",
+    "copy": "node copy.js",
     "setup": "node setup.js"
   },
   "repository": {
