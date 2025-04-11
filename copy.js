@@ -38,6 +38,7 @@ if (!resolvedRepoPath || !existsSync(resolvedPackageJsonPath)) {
 const packageJson = JSON.parse(readFileSync(resolvedPackageJsonPath, "utf8"));
 const currentVersion = packageJson.version;
 const currentMajorMinorVersion = currentVersion.replace(/^(\d+\.\d+)\.\d+.*$/, "$1");
+const versionTag = currentVersion.match(/-([-a-zA-Z0-9]+)$/)?.[1];
 const versionIsValid = /^\d+\.\d+$/.test(currentMajorMinorVersion);
 
 if (!versionIsValid) {
@@ -45,7 +46,9 @@ if (!versionIsValid) {
     exit(1);
 }
 
-console.log(`Current agentforce-messaging version is ${currentMajorMinorVersion}`);
+const destVersion = `${currentMajorMinorVersion}${versionTag ? `-${versionTag}` : ""}`;
+
+console.log(`Current agentforce-messaging version is ${destVersion}`);
 
 const distDir = resolve(resolvedRepoPath, "dist/");
 if (!existsSync(distDir)) {
@@ -54,19 +57,19 @@ if (!existsSync(distDir)) {
 }
 
 const releasesDir = resolve(__dirname, "builds/ngc");
-const releaseDir = resolve(releasesDir, currentMajorMinorVersion);
+const releaseDir = resolve(releasesDir, destVersion);
 if (!existsSync(releaseDir)) {
-    console.log(`Version ${currentMajorMinorVersion} not found in this repo; adding it now`);
+    console.log(`Version ${destVersion} not found in this repo; adding it now`);
 } else {
-    console.log(`Overwriting existing ${currentMajorMinorVersion} release`);
+    console.log(`Overwriting existing ${destVersion} release`);
     rmSync(releaseDir, { recursive: true });
 }
 mkdirSync(releaseDir);
 
-console.log(`Copying version ${currentMajorMinorVersion} from agentforce-messaging`);
+console.log(`Copying version ${destVersion} from agentforce-messaging`);
 cpSync(distDir, releaseDir, { recursive: true });
 console.log(`Copying finished! Staging files for Git commit`);
-await promisify(exec)(`git add builds/ngc/${currentMajorMinorVersion}/*`);
+await promisify(exec)(`git add builds/ngc/${destVersion}/*`);
 console.log(`Committing changes`);
 await promisify(exec)(`git commit -m "feat: auto-commit of agentforce-messaging v${currentVersion}"`);
 console.log(`Commit completed. Be sure to push your changes and open a PR!`);
