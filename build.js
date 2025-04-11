@@ -1,4 +1,13 @@
-import { readdir, statSync, existsSync, readFileSync, mkdirSync, rmSync, cpSync, writeFileSync } from "node:fs";
+import {
+    readdir,
+    statSync,
+    existsSync,
+    readFileSync,
+    mkdirSync,
+    rmSync,
+    cpSync,
+    writeFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -49,9 +58,13 @@ const buildManifest = async () => {
                     );
                     return m;
                 }
-                const path = `<root>/releases/ngc/${majorMinorVersion}/${entry_point}`;
+                const versionTag = version.match(/-([-a-zA-Z0-9]+)$/)?.[1];
+                const destVersion = `${majorMinorVersion}${
+                    versionTag ? `-${versionTag}` : ""
+                }`;
+                const path = `<root>/releases/ngc/${destVersion}/${entry_point}`;
                 m.available_versions.push({
-                    version: majorMinorVersion,
+                    version: destVersion,
                     full_version: version,
                     minimum_bootstrap_versions,
                     path,
@@ -73,9 +86,14 @@ const buildManifest = async () => {
 
 const manifest = await buildManifest();
 if (!existsSync(distDir)) {
-    mkdirSync(distDir)
+    mkdirSync(distDir);
 }
 rmSync(distDir, { recursive: true });
 mkdirSync(resolve(distDir, "releases/ngc"), { recursive: true });
-cpSync(resolve(ngcBuildsDir, "./"), resolve(distDir, "releases/ngc"), { recursive: true });
-writeFileSync(resolve(distDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+cpSync(resolve(ngcBuildsDir, "./"), resolve(distDir, "releases/ngc"), {
+    recursive: true,
+});
+writeFileSync(
+    resolve(distDir, "manifest.json"),
+    JSON.stringify(manifest, null, 2)
+);
