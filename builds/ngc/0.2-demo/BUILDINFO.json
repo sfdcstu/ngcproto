@@ -1,0 +1,10 @@
+{
+  "version": "0.2.0-demo",
+  "minimum_bootstrap_versions": [
+    "254.12",
+    "256.0"
+  ],
+  "build_date": "2025-04-11T17:01:11.835Z",
+  "entry_point": "index.js",
+  "css_file": "index.css"
+}
