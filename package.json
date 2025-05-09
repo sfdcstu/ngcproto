@@ -20,6 +20,7 @@
   "homepage": "https://github.com/airkitjeremy/ngcproto#readme",
   "description": "",
   "devDependencies": {
+    "archiver": "^7.0.1",
     "yaml": "^2.7.1",
     "yargs": "^17.7.2"
   }
