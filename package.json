@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "copy": "node copy.js",
+    "prepare-release": "node prepare-release.js",
     "setup": "node setup.js"
   },
   "repository": {
