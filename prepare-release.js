@@ -8,7 +8,7 @@ import {
     writeFileSync,
 } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { exit } from "node:process";
+import { exit, stderr } from "node:process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { parse } from "yaml";
@@ -57,7 +57,15 @@ if (!resolvedRepoPath || !existsSync(resolvedPackageJsonPath)) {
 
 const promiseExec = promisify(exec);
 const execInRepo = async (cmd) => {
-    const result = await promiseExec(`cd ${agentforceMessagingRepoPath}; ${cmd}`);
+    const result = await promiseExec(
+        `cd ${agentforceMessagingRepoPath}; ${cmd}`
+    ).catch((err) => ({
+        // this typically means the command returned a non-zero code
+        // we will simply pass the `err` object back as the result
+        // but we will copy `stdout` to `stderr` if `stderr` is blank
+        ...err,
+        stderr: err.stderr || err.stdout,
+    }));
     return result;
 };
 
@@ -143,20 +151,37 @@ const mergeResult = await execInRepo(
     `git merge origin/main --no-commit --squash -s ort -X theirs`
 );
 if (mergeResult.stderr) {
-    if (!mergeResult.stderr.match(/Automatic merge went well/)) {
+    if (mergeResult.stderr.match(/CONFLICT \(modify\/delete\)/)) {
+        // ensure we are just dealing with deletions in origin/main
+        const statusResult = await execInRepo("git status -s | grep -E '^[UAD][UAD]'");
+        if (!statusResult.stdout.split(/\n/g).every((line) => !line || /^[UAD][UAD]\s/.test(line))) {
+            console.error(`Unexpected merge conflict while merging origin/main into ${releaseBranch} branch`, statusResult.stdout, mergeResult.stderr);
+            exit(1);
+        }
+        const resolveResult = await execInRepo("git status -s | grep -E '^UD ' | awk '{print $2}' | xargs git rm");
+        if (resolveResult.stderr) {
+            console.error(`Unexpected error while trying to resolve deleted files during merge of origin/main into ${releaseBranch} branch`, resolveResult.stderr, mergeResult.stderr);
+            exit(1);
+        }
+        const unresolvedResult = await execInRepo("git status -s | grep -E '^[UAD][UAD]'");
+        if (unresolvedResult.stdout || unresolvedResult.stderr) {
+            console.error(`Unsuccessful merge of origin/main into ${releaseBranch} branch`, unresolvedResult.stdout || unresolvedResult.stderr, mergeResult.stderr);
+            exit(1);
+        }
+    } else if (!mergeResult.stderr.match(/Automatic merge went well/)) {
         console.error(
             `Error while merging origin/main into ${releaseBranch} branch`,
             mergeResult.stderr
         );
         exit(1);
     }
-}
-if (mergeResult.stdout.match(/CONFLICT/)) {
+} else if (mergeResult.stdout.match(/CONFLICT/)) {
     console.error(
         `Conflicts encountered while merging origin/main even though we specified a merge strategy to accept remote changes. A manual merge and build will be required to release version ${newVersion}.`
     );
     exit(1);
 }
+
 const squashMessagePath = resolve(resolvedRepoPath, ".git/SQUASH_MSG");
 if (!existsSync(squashMessagePath)) {
     console.error(
