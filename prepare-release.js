@@ -130,7 +130,7 @@ const mostRecentCommitHash = lastCommitMessage.match(/^commit (.+)$/m)?.[1];
 
 // find out how many PRs have been merged since the last release
 const releasedPRCheck = await execInRepo(
-    `git fetch; git log ${mostRecentCommitHash}..origin/main --merges --grep='@W-.+ \\(#[0-9]+\\)' -E --oneline`
+    `git fetch; git log ${mostRecentCommitHash}..origin/main --grep='@W-.+ \\(#[0-9]+\\)' -E --oneline`
 );
 if (releasedPRCheck.stderr || !releasedPRCheck.stdout) {
     console.error(releasedPRCheck.stderr || "No commits found");
