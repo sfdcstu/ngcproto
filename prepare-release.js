@@ -138,7 +138,8 @@ if (releasedPRCheck.stderr || !releasedPRCheck.stdout) {
 }
 const formattedReleasedPRs = releasedPRCheck.stdout
     .split(/\n/g)
-    .map((msg) => msg.replace(/^....... (?:\([^)]+ )/, ""));
+    .map((msg) => msg.replace(/^....... (?:\([^)]+ )/, ""))
+    .filter((msg) => !!msg);
 const prCount = formattedReleasedPRs.length;
 const newPatchVersion = currentPatchVersion + prCount;
 const newVersion = currentVersion.replace(
