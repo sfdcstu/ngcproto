@@ -1,10 +1,10 @@
 {
-  "version": "0.3.118",
+  "version": "0.3.123",
   "minimum_bootstrap_versions": [
     "254.12",
     "256.0"
   ],
-  "build_date": "2025-06-11T23:00:23.056Z",
+  "build_date": "2025-06-17T16:20:23.953Z",
   "entry_point": "index.js",
   "css_file": "index.css"
 }
