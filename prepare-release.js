@@ -120,13 +120,13 @@ if (!versionIsValid) {
 }
 
 // determine the last commit that we merged in
-// this will be the first `commit XXX` in the squash message from the last release
-const lastCommitMessageResult = await execInRepo(
-    `git log -1 --pretty=format:"%B"`
-);
-const lastCommitMessage =
-    lastCommitMessageResult.stdout ?? lastCommitMessageResult.stderr;
-const mostRecentCommitHash = lastCommitMessage.match(/^commit (.+)$/m)?.[1];
+// this will be the commit immediately before HEAD
+const mostRecentCommitResult = await execInRepo("git merge-base HEAD origin/main");
+const mostRecentCommitHash = (mostRecentCommitResult.stdout ?? mostRecentCommitResult.stderr)?.trim();
+if (!mostRecentCommitHash) {
+    console.error("Unable to determine most recently-merged commit");
+    exit(1);
+}
 
 // find out how many PRs have been merged since the last release
 const releasedPRCheck = await execInRepo(
@@ -149,7 +149,7 @@ const newVersion = currentVersion.replace(
 
 // before doing anything else, we want to merge origin/main into the branch
 const mergeResult = await execInRepo(
-    `git merge origin/main --no-commit --squash -s ort -X theirs`
+    `git merge origin/main --no-commit --no-ff -s ort -X theirs`
 );
 if (mergeResult.stderr) {
     if (mergeResult.stderr.match(/CONFLICT \(modify\/delete\)/)) {
@@ -183,10 +183,10 @@ if (mergeResult.stderr) {
     exit(1);
 }
 
-const squashMessagePath = resolve(resolvedRepoPath, ".git/SQUASH_MSG");
-if (!existsSync(squashMessagePath)) {
+const mergeMessagePath = resolve(resolvedRepoPath, ".git/MERGE_MSG");
+if (!existsSync(mergeMessagePath)) {
     console.error(
-        "Squash message file does not exist. This should not happen."
+        "Merge message file does not exist. This should not happen."
     );
     exit(1);
 }
@@ -203,9 +203,10 @@ await execInRepo(
     `jq '.version = "${newVersion}"' package.json > package.json.tmp && mv package.json.tmp package.json`
 );
 
-// update the merge commit message
-const commitMsg = readFileSync(squashMessagePath);
-writeFileSync(squashMessagePath, `RELEASE ${newVersion}\n\n${commitMsg}`);
+// amend the commit message with our release version and the list of PRs
+const newCommitMsg = `RELEASE ${newVersion}\n\n${formattedReleasedPRs.join("\n")}\n`;
+
+writeFileSync(mergeMessagePath, newCommitMsg);
 
 // add the updated package.json
 await execInRepo(
@@ -225,7 +226,7 @@ if (combinedResult.match(/Command failed/)) {
 
 // commit
 await execInRepo(
-    `git commit -F '.git/SQUASH_MSG' --no-verify`
+    `git commit -F '.git/MERGE_MSG' --no-verify`
 );
 
 // we might end up with some extra files we didn't want
